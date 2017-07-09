@@ -29,7 +29,7 @@ class GitProcess extends Process {
 	 */
 	static public function get_git_sh_path() {
 		// "realpath" dereferences symlinks.
-		$gitSh = dirname(dirname(realpath(__DIR__))) . DIRECTORY_SEPARATOR . 'git.sh';
+		$gitSh = dirname(dirname(dirname(realpath(__DIR__)))) . DIRECTORY_SEPARATOR . 'git.sh';
 		return realpath($gitSh);
 	}
 
