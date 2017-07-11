@@ -23,9 +23,18 @@ class GitRepository extends ReadonlyGitRepository {
 		parent::__construct($gitUrl, $revision, $identityFile, $localPath);
 
 		if ($localPath === null) {
+			$localBasePath = sprintf(
+				'%s/temp-clone',
+				sys_get_temp_dir()
+			);
+
+			if (!is_dir($localBasePath)) {
+				mkdir($localBasePath);
+			}
+
 			$localPath = sprintf(
-				'%s/temp-clone/%s',
-				sys_get_temp_dir(),
+				'%s/%s',
+				$localBasePath,
 				sha1(microtime() . $this->getGitUrl())
 			);
 			$this->setCleanup(true);
