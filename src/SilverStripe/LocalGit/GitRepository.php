@@ -14,12 +14,18 @@ class GitRepository extends ReadonlyGitRepository {
 	protected $cleanup = true;
 
 	/**
+	 * @var string
+	 */
+	private $knownHostsFile;
+
+    /**
 	 * @param string $gitUrl
 	 * @param string $revision
 	 * @param string|null $identityFile
 	 * @param string|null $localPath Specify local path to clone repo. Defaults to auto-generated path in temp
+	 * @param string|null $knownHostsFile Path to custom known_hosts. Must be read/writable.
 	 */
-	public function __construct($gitUrl, $revision = 'master', $identityFile = null, $localPath = null) {
+	public function __construct($gitUrl, $revision = 'master', $identityFile = null, $localPath = null, $knownHostsFile = null) {
 		parent::__construct($gitUrl, $revision, $identityFile, $localPath);
 
 		if ($localPath === null) {
@@ -45,6 +51,7 @@ class GitRepository extends ReadonlyGitRepository {
 		}
 
 		$this->localPath = $localPath;
+		$this->knownHostsFile = $knownHostsFile;
 
 		$this->cloneTempRepo();
 	}
@@ -58,6 +65,14 @@ class GitRepository extends ReadonlyGitRepository {
 			$process = new Process(sprintf('rm -rf %s', escapeshellarg($this->getLocalPath())));
 			$process->run();
 		}
+	}
+
+	/**
+	 * @return string|null
+	 */
+	public function getKnownHostsFile()
+	{
+		return $this->knownHostsFile;
 	}
 
 	/**
@@ -89,6 +104,9 @@ class GitRepository extends ReadonlyGitRepository {
 		));
 		if ($this->getIdentityFile()) {
 			$process->setIdentityFile($this->getIdentityFile());
+		}
+		if ($this->getKnownHostsFile()) {
+			$process->setKnownHostsFile($this->getKnownHostsFile());
 		}
 		$process->setTimeout(600);
 		$process->run();

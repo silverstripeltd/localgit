@@ -7,12 +7,9 @@ use Symfony\Component\Process\Process;
 /**
  * Class GitProcess
  *
- * This is a light extension of Process to wrap git command with an identity key and pass through
- * to a shell script. This means we can securely clone repo's that users have permission to clone instead
- * of using deploynaut's key which has access to private repo's.
- *
- * @example
- * env IDENT_KEY=~/.ssh/id_rsa GIT_SSH=./git.sh git clone git@code.platform.silverstripe.com:222/aws/project.git
+ * This is a light extension of Process to wrap git command with some custom options.
+ * This allows us to set a per-execution identity for greater security (using sandboxed credentials),
+ * as well as use a customised known_hosts file.
  */
 class GitProcess extends Process {
 
@@ -20,6 +17,11 @@ class GitProcess extends Process {
 	 * @var string Path to private key
 	 */
 	protected $identityFile;
+
+	/**
+	 * @var string Path to UserKnownHostsFile
+	 */
+	protected $knownHostsFile;
 
 	/**
 	 * Retrieves an absolute path to git.sh based on self::GIT_SSH.
@@ -42,14 +44,28 @@ class GitProcess extends Process {
 
 	/**
 	 * @param string $file Path to private key
-	 * @throws \RuntimeException
 	 */
 	public function setIdentityFile($file) {
 		if(is_file($file) && is_readable($file)) {
 			$this->identityFile = $file;
 		} else {
-			throw new \RuntimeException(sprintf('%s does not exist or is not readable.', $file));
+			throw new Exception(sprintf('%s does not exist or is not readable.', $file));
 		}
+	}
+
+	/**
+	 * @return string|null
+	 */
+	public function getKnownHostsFile()
+	{
+		return $this->knownHostsFile;
+	}
+
+	/**
+	 * @param string $file Path to known hosts file. Must be read/writable.
+	 */
+	public function setKnownHostsFile($file) {
+		$this->knownHostsFile = $file;
 	}
 
 	/**
@@ -59,6 +75,7 @@ class GitProcess extends Process {
 	public function run($callback = null) {
 		$this->setCommandLine(
 			'env IDENT_KEY=' . escapeshellarg($this->getIdentityFile())
+			. ' KNOWN_HOSTS_FILE=' . escapeshellarg($this->getKnownHostsFile())
 			. ' GIT_SSH=' . escapeshellarg(self::get_git_sh_path())
 			. ' ' . $this->getCommandLine()
 		);
