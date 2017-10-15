@@ -9,7 +9,7 @@
 	},
 	"autoload": {
 		"psr-4": {
-			"SilverStripe\\LocalGit\\": "src/SilverStripe/LocalGit"
+			"SilverStripe\\LocalGit\\": "src"
 		}
 	},
 	"config": {
