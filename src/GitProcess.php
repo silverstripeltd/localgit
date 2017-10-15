@@ -2,6 +2,7 @@
 
 namespace SilverStripe\LocalGit;
 
+use Exception;
 use Symfony\Component\Process\Process;
 
 /**
@@ -30,8 +31,18 @@ class GitProcess extends Process {
 	 * @return string Path to git.sh
 	 */
 	static public function get_git_sh_path() {
-		// "realpath" dereferences symlinks.
-		$gitSh = dirname(realpath(__DIR__)) . DIRECTORY_SEPARATOR . 'git.sh';
+		// SSP seems to have a bug where exec bit disappears from original git.sh during fast deploys
+		// (or maybe even full deploys) during composer install, when using cache on Debian. The bug is intermittent.
+		$vendorDir = dirname(dirname(dirname(realpath(__DIR__))));
+		$gitSh = $vendorDir . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'git.sh';
+
+		if (!file_exists($gitSh)) {
+			throw new Exception(sprintf('Git proxy script not found in "%s".', $gitSh));
+		}
+
+		if (!is_executable($gitSh)) {
+			throw new Exception(sprintf('Git proxy script at "%s" is not executable.', $gitSh));
+		}
 
 		return realpath($gitSh);
 	}

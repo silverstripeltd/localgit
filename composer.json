@@ -12,6 +12,9 @@
 			"SilverStripe\\LocalGit\\": "src"
 		}
 	},
+	"bin": [
+		"git.sh"
+	],
 	"config": {
 		"process-timeout": 600
 	}
