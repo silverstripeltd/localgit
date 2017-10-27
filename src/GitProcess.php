@@ -85,6 +85,8 @@ class GitProcess extends Process {
 	 * @return null|int null or 0 if everything went fine, or an error code
 	 */
 	public function run($callback = null) {
+
+		// caution! we can't use setEnv() because it wipes out the existing env!
 		$this->setCommandLine(
 			'env IDENT_KEY=' . escapeshellarg($this->getIdentityFile())
 			. ' KNOWN_HOSTS_FILE=' . escapeshellarg($this->getKnownHostsFile())
