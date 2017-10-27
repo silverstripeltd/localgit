@@ -85,12 +85,14 @@ class GitProcess extends Process {
 	 * @return null|int null or 0 if everything went fine, or an error code
 	 */
 	public function run($callback = null) {
-		$this->setEnv([
-			'IDENT_KEY' => $this->getIdentityFile(),
-			'KNOWN_HOSTS_FILE' => $this->getKnownHostsFile(),
-			'GIT_SSH' => self::get_git_sh_path(),
-		]);
-		return parent::run($callback);
+		$this->setCommandLine(
+			'env IDENT_KEY=' . escapeshellarg($this->getIdentityFile())
+			. ' KNOWN_HOSTS_FILE=' . escapeshellarg($this->getKnownHostsFile())
+			. ' GIT_SSH=' . escapeshellarg(self::get_git_sh_path())
+			. ' ' . $this->getCommandLine()
+		);
+
+		parent::run($callback);
 	}
 
 }
