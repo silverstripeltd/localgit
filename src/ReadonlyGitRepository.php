@@ -22,6 +22,11 @@ class ReadonlyGitRepository {
 	/**
 	 * @var string
 	 */
+	protected $home;
+
+	/**
+	 * @var string
+	 */
 	protected $localPath = '';
 
 	/**
@@ -95,6 +100,20 @@ class ReadonlyGitRepository {
 	}
 
 	/**
+	 * @return string
+	 */
+	public function getHome() {
+		return $this->home;
+	}
+
+	/**
+	 * @param string $file Path to private key
+	 */
+	public function setHome($path) {
+		$this->home = $path;
+	}
+
+	/**
 	 * Return the path used for temporarily downloading this repository.
 	 *
 	 * @return string
@@ -116,13 +135,15 @@ class ReadonlyGitRepository {
 		$revision = ($revision !== null) ? $revision : $this->getGitRevision();
 		$process = new GitProcess(
 			sprintf(
-				'git show %2$s:%3$s',
-				escapeshellarg($this->getLocalPath()),
+				'git show %s:%s',
 				escapeshellarg($revision),
 				escapeshellarg($file)
 			),
 			$this->getLocalPath()
 		);
+		if ($this->getHome()) {
+			$process->setHome($this->getHome());
+		}
 		$process->run();
 		if (!$process->isSuccessful()) {
 			throw new \RuntimeException($process->getErrorOutput());
@@ -136,6 +157,9 @@ class ReadonlyGitRepository {
 	 */
 	public function getTags() {
 		$process = new GitProcess(sprintf('git ls-remote --refs --tags %s', escapeshellarg($this->getGitUrl())));
+		if ($this->getHome()) {
+			$process->setHome($this->getHome());
+		}
 		if ($this->getIdentityFile()) {
 			$process->setIdentityFile($this->getIdentityFile());
 		}
@@ -165,6 +189,9 @@ class ReadonlyGitRepository {
 			sprintf('git describe --tags %s', escapeshellarg($value)),
 			$this->getLocalPath()
 		);
+		if ($this->getHome()) {
+			$process->setHome($this->getHome());
+		}
 		if ($this->getIdentityFile()) {
 			$process->setIdentityFile($this->getIdentityFile());
 		}
@@ -191,6 +218,9 @@ class ReadonlyGitRepository {
 			escapeshellarg($this->getGitUrl()),
 			escapeshellarg($value)
 		));
+		if ($this->getHome()) {
+			$process->setHome($this->getHome());
+		}
 		if ($this->getIdentityFile()) {
 			$process->setIdentityFile($this->getIdentityFile());
 		}

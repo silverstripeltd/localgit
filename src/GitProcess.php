@@ -25,6 +25,11 @@ class GitProcess extends Process {
 	protected $knownHostsFile;
 
 	/**
+	 * @var string
+	 */
+	protected $home;
+
+	/**
 	 * Retrieves an absolute path to git.sh based on self::GIT_SSH.
 	 * The input path is assumed to be relative to the base dir of the rainforest project.
 	 *
@@ -66,6 +71,24 @@ class GitProcess extends Process {
 	}
 
 	/**
+	 * @return string
+	 */
+	public function getHome() {
+		return $this->home;
+	}
+
+	/**
+	 * @param string $file Path to private key
+	 */
+	public function setHome($path) {
+		if(is_dir($path) && is_readable($path)) {
+			$this->home = $path;
+		} else {
+			throw new Exception(sprintf('%s does not exist or is not readable.', $path));
+		}
+	}
+
+	/**
 	 * @return string|null
 	 */
 	public function getKnownHostsFile()
@@ -85,16 +108,23 @@ class GitProcess extends Process {
 	 * @return null|int null or 0 if everything went fine, or an error code
 	 */
 	public function run($callback = null) {
-
 		// caution! we can't use setEnv() because it wipes out the existing env!
-		$this->setCommandLine(
-			'env IDENT_KEY=' . escapeshellarg($this->getIdentityFile())
-			. ' KNOWN_HOSTS_FILE=' . escapeshellarg($this->getKnownHostsFile())
-			. ' GIT_SSH=' . escapeshellarg(self::get_git_sh_path())
-			. ' ' . $this->getCommandLine()
-		);
+		$env = [
+			'IDENT_KEY' => $this->getIdentityFile(),
+			'KNOWN_HOSTS_FILE' => $this->getKnownHostsFile(),
+			'GIT_SSH' => self::get_git_sh_path(),
+			'HOME' => $this->getHome(),
+		];
+		$parts = ['env'];
+		foreach ($env as $k => $v) {
+			if (!$v) continue;
+			$parts[] = sprintf('%s=%s', $k, escapeshellarg($v));
+		}
+		$parts[] = $this->getCommandLine();
 
-		parent::run($callback);
+		$this->setCommandLine(implode(' ', $parts));
+
+		return parent::run($callback);
 	}
 
 }

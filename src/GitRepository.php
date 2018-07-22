@@ -102,6 +102,9 @@ class GitRepository extends ReadonlyGitRepository {
 			escapeshellarg($this->getGitUrl()),
 			escapeshellarg($this->getGitRevision())
 		));
+		if ($this->getHome()) {
+			$process->setHome($this->getHome());
+		}
 		if ($this->getIdentityFile()) {
 			$process->setIdentityFile($this->getIdentityFile());
 		}
@@ -126,6 +129,9 @@ class GitRepository extends ReadonlyGitRepository {
 			return false;
 		}
 		$process = new GitProcess('git fetch', $this->getLocalPath());
+		if ($this->getHome()) {
+			$process->setHome($this->getHome());
+		}
 		if ($this->getIdentityFile()) {
 			$process->setIdentityFile($this->getIdentityFile());
 		}
