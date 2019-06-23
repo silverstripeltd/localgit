@@ -2,6 +2,8 @@
 
 namespace SilverStripe\LocalGit;
 
+use SilverStripe\LocalGit\Exceptions\FileNotFoundException;
+
 class ReadonlyGitRepository {
 
 	/**
@@ -126,10 +128,11 @@ class ReadonlyGitRepository {
 	 * Gets a file from the given revision. Defaults to the current
 	 * revision if not given.
 	 *
-	 * @throws \RuntimeException
 	 * @param string $file
 	 * @param string|null $revision Specify revision. Defaults to current
 	 * @return string|null
+	 * @throws FileNotFoundException
+	 * @throws \RuntimeException
 	 */
 	public function getFileContent($file, $revision = null) {
 		$revision = ($revision !== null) ? $revision : $this->getGitRevision();
@@ -145,10 +148,16 @@ class ReadonlyGitRepository {
 			$process->setHome($this->getHome());
 		}
 		$process->run();
-		if (!$process->isSuccessful()) {
-			throw new \RuntimeException($process->getErrorOutput());
+		if ($process->isSuccessful()) {
+			return $process->getOutput();
 		}
-		return $process->getOutput();
+
+		// Git doesn't return specific error codes for failures, so we have to check the error output
+		if (stripos($process->getErrorOutput(), 'does not exist') !== false) {
+			throw new FileNotFoundException($process->getErrorOutput());
+		}
+
+		throw new \RuntimeException($process->getErrorOutput());
 	}
 
 	/**
